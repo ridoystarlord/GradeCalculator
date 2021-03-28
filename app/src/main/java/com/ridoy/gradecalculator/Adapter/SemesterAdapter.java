@@ -36,7 +36,9 @@ public class SemesterAdapter extends RecyclerView.Adapter<SemesterAdapter.Semest
     public void onBindViewHolder(@NonNull SemesterViewHolder holder, int position) {
         Semester semester=semesterList.get(position);
         holder.semesterName.setText(semester.getSemesterName());
-        holder.semesterCredit.setText(String.valueOf(semester.getSemesterCredit()));
+        holder.semesterCredit.setText("Credit: "+String.valueOf(semester.getSemesterCredit()));
+        double tempcgpa=semester.getSemesterCGPA();
+        holder.semesterCGPA.setText(String.format("%.2f", tempcgpa));
     }
 
     @Override
@@ -49,11 +51,12 @@ public class SemesterAdapter extends RecyclerView.Adapter<SemesterAdapter.Semest
     }
 
     public class SemesterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView semesterName,semesterCredit;
+        TextView semesterName,semesterCredit,semesterCGPA;
         public SemesterViewHolder(@NonNull View itemView) {
             super(itemView);
             semesterName=itemView.findViewById(R.id.semesterName_TV);
             semesterCredit=itemView.findViewById(R.id.semesterCredit_TV);
+            semesterCGPA=itemView.findViewById(R.id.semesterCGPA_TV);
             itemView.setOnClickListener(this);
         }
 

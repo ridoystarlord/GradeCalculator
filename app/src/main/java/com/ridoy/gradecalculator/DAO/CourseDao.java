@@ -13,14 +13,6 @@ import java.util.List;
 @Dao
 public interface CourseDao {
 
-    @Insert
-    void insertCourse(Course course);
-
-    @Delete
-    void deleteCourse(Course course);
-
-    @Update
-    void updateCourse(Course course);
 
     @Query("SELECT * FROM Course WHERE semesterId LIKE:semesterId")
     List<Course> getCoursesBySemesterId(int semesterId);

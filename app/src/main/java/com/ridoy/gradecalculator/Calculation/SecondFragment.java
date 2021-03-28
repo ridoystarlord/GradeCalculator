@@ -21,6 +21,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ridoy.gradecalculator.Adapter.CourseAdapter;
 import com.ridoy.gradecalculator.DataController;
 import com.ridoy.gradecalculator.ModelClass.Course;
+import com.ridoy.gradecalculator.ModelClass.Semester;
 import com.ridoy.gradecalculator.R;
 import com.ridoy.gradecalculator.Repository.GradeRepository;
 
@@ -30,39 +31,45 @@ import java.util.List;
 public class SecondFragment extends Fragment {
 
     DataController dataController;
-    EditText couseName, courseCredit, courseSGPA;
     TextView CGPA;
-    Button Add;
     RecyclerView courseRV;
 
     int totalCredit = 0;
-    double productofCreditandSGPA = 0;
+    double productofCreditandSGPA = 0.0;
 
     GradeRepository gradeRepository;
-
     CourseAdapter courseAdapter;
     List<Course> courseList = new ArrayList<>();
-    List<Course> deleteCourseList = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_second, container, false);
 
+        CGPA = view.findViewById(R.id.cgpa_TV);
+        courseRV = view.findViewById(R.id.courses_RV);
+
         dataController = DataController.getInstance();
         gradeRepository = new GradeRepository(getActivity().getApplication());
 
-        courseList=gradeRepository.getAllCourses(dataController.getCurrentSemester().getId());
-        deleteCourseList=gradeRepository.getAllCourses(dataController.getCurrentSemester().getId());
+        courseList = gradeRepository.getAllCourses(dataController.getCurrentSemester().getId());
 
-        couseName = view.findViewById(R.id.courseName_ET);
-        courseCredit = view.findViewById(R.id.courseCredit_ET);
-        courseSGPA = view.findViewById(R.id.courseSGPA_ET);
-        CGPA = view.findViewById(R.id.cgpa_TV);
-        Add = view.findViewById(R.id.add_btn);
-        courseRV = view.findViewById(R.id.courses_RV);
+        if (courseList.size() > 0) {
+            calculateCGPAList(courseList);
+        } else {
+            Semester updatesemester = new Semester();
+            updatesemester.setId(dataController.getCurrentSemester().getId());
+            updatesemester.setSemesterName(dataController.getCurrentSemester().getSemesterName());
+            updatesemester.setSemesterCredit(dataController.getCurrentSemester().getSemesterCredit());
+            updatesemester.setSemesterCGPA(0.0);
+            gradeRepository.updateSemester(updatesemester);
+            CGPA.setText("CGPA: 0.0");
+        }
+
         courseRV.setHasFixedSize(true);
+        courseAdapter = new CourseAdapter(getActivity(), courseList);
+        courseRV.setAdapter(courseAdapter);
 
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 return false;
@@ -75,35 +82,43 @@ public class SecondFragment extends Fragment {
             }
         }).attachToRecyclerView(courseRV);
 
-        courseAdapter = new CourseAdapter(getActivity(), courseList);
-        courseRV.setAdapter(courseAdapter);
-
-        if (deleteCourseList.size()>0){
-            calculateCGPAList(deleteCourseList);
-        }
-
-
-        Add.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton addfab = view.findViewById(R.id.addcoursefab);
+        addfab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (courseCredit.getText().toString().isEmpty()) {
-                    courseCredit.setError("Course Credit Required");
-                    courseCredit.requestFocus();
-                    return;
-                }
-                if (courseSGPA.getText().toString().isEmpty()) {
-                    courseSGPA.setError("Your Course SGPA Required");
-                    courseSGPA.requestFocus();
-                    return;
-                }
-                if (couseName.getText().toString().isEmpty()) {
-                    couseName.setError("Course Name Required");
-                    couseName.requestFocus();
-                    return;
-                }
-                calculateCGPA(couseName.getText().toString(),
-                        courseSGPA.getText().toString(),
-                        courseCredit.getText().toString());
+                Dialog dialog = new Dialog(getActivity());
+                dialog.setContentView(R.layout.course_user_input_dialog);
+
+                EditText couseName = dialog.findViewById(R.id.courseName_ET);
+                EditText courseCredit = dialog.findViewById(R.id.courseCredit_ET);
+                EditText courseSGPA = dialog.findViewById(R.id.courseSGPA_ET);
+                Button Add_btn = dialog.findViewById(R.id.add_btn);
+
+                Add_btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (courseCredit.getText().toString().isEmpty()) {
+                            courseCredit.setError("Course Credit Required");
+                            courseCredit.requestFocus();
+                            return;
+                        }
+                        if (courseSGPA.getText().toString().isEmpty()) {
+                            courseSGPA.setError("Course SGPA Required");
+                            courseSGPA.requestFocus();
+                            return;
+                        }
+                        if (couseName.getText().toString().isEmpty()) {
+                            couseName.setError("Course Name Required");
+                            couseName.requestFocus();
+                            return;
+                        }
+                        calculateCGPA(couseName.getText().toString(),
+                                courseSGPA.getText().toString(),
+                                courseCredit.getText().toString());
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show();
             }
         });
 
@@ -121,9 +136,7 @@ public class SecondFragment extends Fragment {
                                 if (courseList == null || courseList.size() == 0) {
                                     Toast.makeText(getActivity(), "Add a Course First", Toast.LENGTH_SHORT).show();
                                 } else {
-                                    gradeRepository.deleteallcourse(dataController.getCurrentSemester().getId());
-                                    gradeRepository.insertCourseList(courseList);
-                                    Toast.makeText(getActivity(), "Saved", Toast.LENGTH_SHORT).show();
+                                    insertCourseList(courseList);
                                 }
                             }
                         })
@@ -139,14 +152,30 @@ public class SecondFragment extends Fragment {
         return view;
     }
 
-    private void calculateCGPAList(List<Course> CourseList) {
-        for (int i=0;i<CourseList.size();i++){
-            Course temp=CourseList.get(i);
-            totalCredit+=temp.getCourseCredit();
-            productofCreditandSGPA+=(temp.getCourseSGPA()*temp.getCourseCredit());
+    private void insertCourseList(List<Course> CourseList) {
+        gradeRepository.deleteallcoursebysemesterid(dataController.getCurrentSemester().getId());
+        calculateCGPAList(CourseList);
+        gradeRepository.insertCourseList(CourseList);
+        Toast.makeText(getActivity(), "Saved", Toast.LENGTH_SHORT).show();
+        getFragmentManager().beginTransaction().detach(this).attach(this).commit();
+    }
+
+    private void calculateCGPAList(List<Course> list) {
+        for (int i = 0; i < list.size(); i++) {
+            Course temp = list.get(i);
+            totalCredit += temp.getCourseCredit();
+            productofCreditandSGPA += (temp.getCourseSGPA() * temp.getCourseCredit());
         }
         double cgpa = productofCreditandSGPA / totalCredit;
         CGPA.setText(String.format("CGPA: %.2f", cgpa));
+
+        Semester updatesemester = new Semester();
+        updatesemester.setId(dataController.getCurrentSemester().getId());
+        updatesemester.setSemesterName(dataController.getCurrentSemester().getSemesterName());
+        updatesemester.setSemesterCredit(dataController.getCurrentSemester().getSemesterCredit());
+        updatesemester.setSemesterCGPA(cgpa);
+        gradeRepository.updateSemester(updatesemester);
+
     }
 
     private void calculateCGPA(String name, String sgpa, String credit) {
@@ -159,10 +188,8 @@ public class SecondFragment extends Fragment {
 
         double cgpa = productofCreditandSGPA / totalCredit;
         CGPA.setText(String.format("CGPA: %.2f", cgpa));
-
         Course course = new Course(name, sgpavalue, creditavalue, dataController.getCurrentSemester().getId());
         courseList.add(course);
-        deleteCourseList.add(course);
         courseAdapter.notifyDataSetChanged();
     }
 
@@ -171,16 +198,27 @@ public class SecondFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
-    public void deleteCourse(int position){
-        Course course=deleteCourseList.get(position);
-        deleteCourseList.remove(course);
-        gradeRepository.deleteCourse(course);
-        courseAdapter.notifyDataSetChanged();
+    public void deleteCourse(int position) {
 
-        deleteCourseList=gradeRepository.getAllCourses(dataController.getCurrentSemester().getId());
-        courseList=gradeRepository.getAllCourses(dataController.getCurrentSemester().getId());
-        if (deleteCourseList.size()>0){
-            calculateCGPAList(deleteCourseList);
+        Course course = courseList.get(position);
+        courseList.remove(course);
+        courseAdapter.notifyDataSetChanged();
+        gradeRepository.deleteallcoursebysemesterid(dataController.getCurrentSemester().getId());
+        gradeRepository.insertCourseList(courseList);
+        totalCredit = 0;
+        productofCreditandSGPA = 0.0;
+
+        if (courseList.size() <= 0) {
+            Semester updatesemester = new Semester();
+            updatesemester.setId(dataController.getCurrentSemester().getId());
+            updatesemester.setSemesterName(dataController.getCurrentSemester().getSemesterName());
+            updatesemester.setSemesterCredit(dataController.getCurrentSemester().getSemesterCredit());
+            updatesemester.setSemesterCGPA(0.0);
+            gradeRepository.updateSemester(updatesemester);
+            CGPA.setText("CGPA: 0.0");
+        } else {
+            calculateCGPAList(courseList);
         }
+
     }
 }

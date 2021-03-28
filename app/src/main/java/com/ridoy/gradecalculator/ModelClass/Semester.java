@@ -7,13 +7,26 @@ import java.util.List;
 @Entity
 public class Semester {
     @PrimaryKey(autoGenerate = true)
-    public int id;
-    public String semesterName;
-    public int semesterCredit;
+    private int id;
+    private String semesterName;
+    private int semesterCredit;
+    private double semesterCGPA;
 
-    public Semester(String semesterName, int semesterCredit) {
+    public Semester() {
+    }
+
+    public Semester(String semesterName, int semesterCredit, double semesterCGPA) {
         this.semesterName = semesterName;
         this.semesterCredit = semesterCredit;
+        this.semesterCGPA = semesterCGPA;
+    }
+
+    public double getSemesterCGPA() {
+        return semesterCGPA;
+    }
+
+    public void setSemesterCGPA(double semesterCGPA) {
+        this.semesterCGPA = semesterCGPA;
     }
 
     public int getId() {

@@ -3,8 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.ridoy.gradecalculator.MainActivity">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_main_barchat"
+        android:icon="@drawable/ic_barchat"
+        android:title="Barchat"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_main_share"
+        android:icon="@drawable/ic_share"
+        android:title="Share"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/menu_main_rate"
+        android:icon="@drawable/ic_rate"
+        android:title="Rating"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/main_menu_clearalldata"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="@string/action_clearalldata"
         app:showAsAction="never" />
 </menu>

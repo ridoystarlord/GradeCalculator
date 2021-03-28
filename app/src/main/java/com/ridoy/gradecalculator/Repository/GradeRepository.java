@@ -27,8 +27,10 @@ public class GradeRepository {
     }
 
     public void insertSemester(Semester semester) {
-
-        new InsertTask(semesterDao).execute(semester);
+        new InsertSemesterTask(semesterDao).execute(semester);
+    }
+    public void updateSemester(Semester semester) {
+        new updateSemesterTask(semesterDao).execute(semester);
     }
 
     public void insertCourseList(List<Course> courseList) {
@@ -46,9 +48,14 @@ public class GradeRepository {
         return semesterList;
     }
 
-    public void deleteCourse(Course course){
-        new deleteCourseTask(courseDao).execute(course);
+    public void deleteAllsemester(){
+        new deleteSemesterTask(semesterDao).execute();
     }
+
+    public void deleteSemester(Semester semester){
+        new deleteoneSemesterTask(semesterDao).execute(semester);
+    }
+
 
     public List<Course> getAllCourses(int semesterid) {
         try {
@@ -61,17 +68,21 @@ public class GradeRepository {
         return courseList;
     }
 
-    public void deleteallcourse(int semesterid){
-        new deleteallcourseTask(courseDao).execute(semesterid);
+    public void deleteallcoursebysemesterid(int semesterid){
+        new deleteallcoursebysemesteridTask(courseDao).execute(semesterid);
+    }
+
+    public void deleteAllcourse(){
+        new deleteAllcourseTask(courseDao).execute();
     }
 
     //background Class
 
-    private static class InsertTask extends AsyncTask<Semester, Void, Void> {
+    private static class InsertSemesterTask extends AsyncTask<Semester, Void, Void> {
 
         private SemesterDao dao;
 
-        public InsertTask(SemesterDao semesterDao) {
+        public InsertSemesterTask(SemesterDao semesterDao) {
             dao = semesterDao;
         }
 
@@ -79,10 +90,25 @@ public class GradeRepository {
         protected Void doInBackground(Semester... semesters) {
 
             dao.insertSemester(semesters[0]);
-
             return null;
         }
     }
+    private static class updateSemesterTask extends AsyncTask<Semester, Void, Void> {
+
+        private SemesterDao dao;
+
+        public updateSemesterTask(SemesterDao semesterDao) {
+            dao = semesterDao;
+        }
+
+        @Override
+        protected Void doInBackground(Semester... semesters) {
+
+            dao.updateSemester(semesters[0]);
+            return null;
+        }
+    }
+
 
     private static class GetAllSemesterTask extends AsyncTask<Void, Void, List<Semester>> {
 
@@ -124,31 +150,61 @@ public class GradeRepository {
         }
     }
 
-    private static  class deleteCourseTask extends AsyncTask<Course,Void,Void>{
+    private static  class deleteSemesterTask extends AsyncTask<Void,Void,Void>{
 
-        CourseDao dao;
+        SemesterDao dao;
 
-        public deleteCourseTask(CourseDao courseDao) {
-            dao=courseDao;
+        public deleteSemesterTask(SemesterDao semesterDao) {
+            dao=semesterDao;
         }
 
+
         @Override
-        protected Void doInBackground(Course... courses) {
-            dao.deleteCourse(courses[0]);
+        protected Void doInBackground(Void... voids) {
+            dao.deleteAllSemester();
             return null;
         }
     }
-    private static class deleteallcourseTask extends AsyncTask<Integer,Void,Void>{
+    private static class deleteallcoursebysemesteridTask extends AsyncTask<Integer,Void,Void>{
 
         CourseDao dao;
 
-        public deleteallcourseTask(CourseDao dao) {
+        public deleteallcoursebysemesteridTask(CourseDao dao) {
             this.dao = dao;
         }
 
         @Override
         protected Void doInBackground(Integer... integers) {
            dao.deleteAllCoursebysemesterId(integers[0]);
+            return null;
+        }
+    }
+
+    private static  class deleteAllcourseTask extends AsyncTask<Void,Void,Void>{
+
+        CourseDao dao;
+
+        public deleteAllcourseTask(CourseDao dao) {
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dao.deleteAllCourse();
+            return null;
+        }
+    }
+
+    private static class deleteoneSemesterTask extends AsyncTask<Semester,Void,Void> {
+
+        SemesterDao dao;
+        public deleteoneSemesterTask(SemesterDao semesterDao) {
+            dao=semesterDao;
+        }
+
+        @Override
+        protected Void doInBackground(Semester... semesters) {
+            dao.deleteSemester(semesters[0]);
             return null;
         }
     }

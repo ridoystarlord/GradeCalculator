@@ -10,7 +10,7 @@ import com.ridoy.gradecalculator.DAO.CourseDao;
 import com.ridoy.gradecalculator.DAO.SemesterDao;
 import com.ridoy.gradecalculator.ModelClass.Course;
 import com.ridoy.gradecalculator.ModelClass.Semester;
-@Database(entities = {Course.class,Semester.class}, version = 1, exportSchema = false)
+@Database(entities = {Course.class,Semester.class}, version = 3, exportSchema = false)
 public abstract class GradeDatabase extends RoomDatabase {
 
     public abstract CourseDao courseDao();
